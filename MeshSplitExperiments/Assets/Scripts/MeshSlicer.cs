@@ -30,6 +30,10 @@ public static class MeshSlicer
                 MeshConstructionHelper helper = vertexA.Side? positiveMesh : negativeMesh;
                 helper.AddMeshSection(vertexA, vertexB, vertexC);
             }
+            else //triangle is split between positive and negative normal plane
+            {
+
+            }
         }
 
         return new[] { positiveMesh.ConstructMesh(), negativeMesh.ConstructMesh() }; //return both new objects
@@ -47,6 +51,40 @@ public static class MeshSlicer
             Normal = mesh.normals[index]
         };
         return vertexData;
+    }
+
+    public static bool PointIntersectsAPlane(Vector3 from, Vector3 to, Vector3 planeOrigin, Vector3 normal, out Vector3 result)
+    {
+        Vector3 translation = to - from;
+        float dot = Vector3.Dot(normal, translation);
+        //check if lines are not perpendicular
+        if (Mathf.Abs(dot) > System.Single.Epsilon)
+        {
+            Vector3 fromOrigin = from - planeOrigin;
+            float fac = -Vector3.Dot(normal, fromOrigin) / dot;
+            translation = translation * fac;
+            result = from + translation;
+            return true;
+        }
+
+        result = Vector3.zero;
+        return false;
+    }
+
+    //create new vertexData based on intersection position
+    private static VertexData GetIntersectionVertex(VertexData vertexA, VertexData vertexB, Vector3 planeOrigin, Vector3 normal)
+    {
+        PointIntersectsAPlane(vertexA.Position, vertexB.Position, planeOrigin, normal, out Vector3 result);
+        float distanceA = vector3.Distance(vertexA.Position, result);
+        float distanceB = vector3.Distance(vertexB.Position, result);
+        float t = distanceA / (distanceA + distanceB);
+
+        return new VertexData()
+        {
+            Position = result, 
+            Normal = normal,
+            Uv = VertexUtility.InterpolateUvs(vertexA.Uv, vertexB.Uv, t)
+        };
     }
 }
 
