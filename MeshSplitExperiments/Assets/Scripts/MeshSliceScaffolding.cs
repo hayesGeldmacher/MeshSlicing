@@ -12,7 +12,16 @@ public class MeshSliceScaffolding : MonoBehaviour
 
     public void SliceMesh()
     {
-        
+        Mesh[] meshes = MeshSlicer.SliceMesh(_meshFilter.sharedMesh, _origin, _normal);
+        for (int index = 0; index < meshes.Length; index++){
+
+            Debug.Log("sliced mesh!");
+            Mesh mesh = meshes[index];
+            GameObject submesh = Instantiate(this.gameObject);
+            submesh.gameObject.transform.position += (2 * transform.right);
+            submesh.GetComponent<MeshFilter>().sharedMesh = mesh;
+            
+        }
     }
     private void OnDrawGizmosSelected()
     {
