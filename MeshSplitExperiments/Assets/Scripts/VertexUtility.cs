@@ -9,7 +9,7 @@ public struct VertexData
     public bool Side; //what side of plane is this on
 }
 
-public static class vertexUtility
+public static class VertexUtility
 {
     //gets point between two uvs for creating new vertices
     public static Vector2 InterpolateUvs(Vector2 uv1, Vector2 uv2, float distance)

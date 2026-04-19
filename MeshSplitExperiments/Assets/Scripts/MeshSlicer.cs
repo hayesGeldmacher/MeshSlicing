@@ -32,6 +32,48 @@ public static class MeshSlicer
             }
             else //triangle is split between positive and negative normal plane
             {
+                //have to find intersection between triangle and slice plane
+                VertexData intersectionD;
+                VertexData intersectionE;
+
+                //get the right helper for each triangle corner
+                MeshConstructionHelper helperA = vertexA.Side ? positiveMesh : negativeMesh;
+                MeshConstructionHelper helperB = vertexB.Side ? positiveMesh : negativeMesh;
+                MeshConstructionHelper helperC = vertexC.Side ? positiveMesh : negativeMesh;
+
+                //c on other side
+                if (isABSameSide)
+                {
+                    intersectionD = GetIntersectionVertex(vertexA, vertexC, cutOrigin, cutNormal);
+                    intersectionE = GetIntersectionVertex(vertexB, vertexC, cutOrigin, cutNormal);
+
+                    //create new triangle between mesh intersections
+                    helperA.AddMeshSection(vertexA, vertexB, intersectionE);
+                    helperA.AddMeshSection(vertexA, intersectionE, intersectionD);
+                    helperC.AddMeshSection(intersectionE, vertexC, intersectionD);
+
+                }//a on other side
+                else if (isBCSameSide)
+                {
+                    intersectionD = GetIntersectionVertex(vertexB, vertexA, cutOrigin, cutNormal);
+                    intersectionE = GetIntersectionVertex(vertexC, vertexA, cutOrigin, cutNormal);
+
+                    //create new triangles between mesh interactions
+                    helperB.AddMeshSection(vertexB, vertexC, intersectionE);
+                    helperB.AddMeshSection(vertexB, intersectionE, intersectionD);
+                    helperA.AddMeshSection(intersectionE, vertexA, intersectionD);
+
+
+                }
+                else //b on other side
+                {
+                    intersectionD = GetIntersectionVertex(vertexA, vertexB, cutOrigin, cutNormal);
+                    intersectionE = GetIntersectionVertex(vertexC, vertexB, cutOrigin, cutNormal);
+
+                    helperA.AddMeshSection(vertexA, intersectionE, vertexC);
+                    helperA.AddMeshSection(intersectionD, intersectionE, vertexA);
+                    helperB.AddMeshSection(vertexB, intersectionE, intersectionD);
+                }
 
             }
         }
@@ -75,8 +117,8 @@ public static class MeshSlicer
     private static VertexData GetIntersectionVertex(VertexData vertexA, VertexData vertexB, Vector3 planeOrigin, Vector3 normal)
     {
         PointIntersectsAPlane(vertexA.Position, vertexB.Position, planeOrigin, normal, out Vector3 result);
-        float distanceA = vector3.Distance(vertexA.Position, result);
-        float distanceB = vector3.Distance(vertexB.Position, result);
+        float distanceA = Vector3.Distance(vertexA.Position, result);
+        float distanceB = Vector3.Distance(vertexB.Position, result);
         float t = distanceA / (distanceA + distanceB);
 
         return new VertexData()
