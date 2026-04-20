@@ -158,7 +158,7 @@ MonoBehaviour:
   _drawDebug: 1
   _addPhysics: 1
   sliceForce: 200
-  useDifferentMat: 0
+  useDifferentMat: 1
   mat1: {fileID: 2100000, guid: e9934bf538b80004fbd4b49d55c7a13f, type: 2}
   mat2: {fileID: 2100000, guid: 921c8b404de992449a944a596fa97d89, type: 2}
 --- !u!23 &318403447

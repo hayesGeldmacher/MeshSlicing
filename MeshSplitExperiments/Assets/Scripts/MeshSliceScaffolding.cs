@@ -49,6 +49,14 @@ public class MeshSliceScaffolding : MonoBehaviour
             if (!isPlaying) { submesh.transform.position += submesh.transform.right * 2; }
             submesh.GetComponent<MeshFilter>().sharedMesh = mesh;
 
+            if (useDifferentMat && mat1 != null && mat2 != null) {
+
+                AssignMaterials(ref submesh);
+            }
+
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+
             if(sliceCount >= sliceLimit - 1)
             {
                Debug.Log("Mesh piece has reached slice limit: " + gameObject.name);
@@ -62,7 +70,6 @@ public class MeshSliceScaffolding : MonoBehaviour
                 
                 submesh.GetComponent<MeshSliceScaffolding>().sliceCount = sliceCount + 1; //iterate on slice count
             }
-
 
             if(submesh.transform.TryGetComponent<MeshCollider>(out MeshCollider collider))
             {
@@ -81,31 +88,9 @@ public class MeshSliceScaffolding : MonoBehaviour
             }
             else
             {
-                MeshCollider newCollider = submesh.AddComponent(typeof(MeshCollider)) as MeshCollider;
-                newCollider.sharedMesh = mesh;
-                newCollider.convex = true;
-
-                Rigidbody rigid;
-                if (submesh.transform.TryGetComponent<Rigidbody>(out Rigidbody rb))
-                {
-                    rigid = rb;
-                }
-                else
-                {
-                   rigid = submesh.AddComponent(typeof(Rigidbody)) as Rigidbody;
-                }
-
-                mesh.RecalculateBounds();
-                mesh.RecalculateNormals();
-
-                if (sliceForce > 0 && isPlaying)
-                {
-                    Vector3 trueCenter = submesh.transform.TransformPoint(mesh.bounds.center);
-                    Vector3 targetDir = (transform.position - trueCenter) * -1;
-                    targetDir.Normalize();
-                    rigid.AddForce(targetDir * sliceForce);
-                }
+                CalculatePhysics(ref submesh, ref mesh);
             }
+
         }
 
 
@@ -114,6 +99,41 @@ public class MeshSliceScaffolding : MonoBehaviour
             Destroy(gameObject); //delete the current gameobject once all copies are made
         }
     }
+
+
+    private void AssignMaterials(ref GameObject submesh)
+    {
+        Material[] mats = { mat1, mat2 };
+        MeshRenderer meshRenderer = submesh.GetComponent<MeshRenderer>();
+        meshRenderer.sharedMaterials = mats;
+    }
+
+    private void CalculatePhysics(ref GameObject submesh, ref Mesh mesh)
+    {
+        MeshCollider newCollider = submesh.AddComponent(typeof(MeshCollider)) as MeshCollider;
+        newCollider.sharedMesh = mesh;
+        newCollider.convex = true;
+
+        Rigidbody rigid;
+        if (submesh.transform.TryGetComponent<Rigidbody>(out Rigidbody rb))
+        {
+            rigid = rb;
+        }
+        else
+        {
+            rigid = submesh.AddComponent(typeof(Rigidbody)) as Rigidbody;
+        }
+
+        if (sliceForce > 0 && isPlaying)
+        {
+            Vector3 trueCenter = submesh.transform.TransformPoint(mesh.bounds.center);
+            Vector3 targetDir = (transform.position - trueCenter) * -1;
+            targetDir.Normalize();
+            rigid.AddForce(targetDir * sliceForce);
+        }
+    }
+
+
     private void OnDrawGizmosSelected()
     {
         if (!_drawDebug) return;
