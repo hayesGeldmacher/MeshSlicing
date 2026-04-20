@@ -7,14 +7,15 @@ public static class MeshSlicer
 
     public static Mesh[] SliceMesh(Mesh mesh, Vector3 cutOrigin, Vector3 cutNormal)
     {
-       
+
         Plane plane = new Plane(cutNormal, cutOrigin); //create a plane based on defined normal and origin
         MeshConstructionHelper positiveMesh = new MeshConstructionHelper(); //create mesh on positive side of plane
         MeshConstructionHelper negativeMesh = new MeshConstructionHelper(); //create mesh on negative side of plane
 
+        List<VertexData> pointsAlongPlane = new List<VertexData>();
         //iterate over every triangle in the mesh, see if its on positive or negative side of normal-oriented plane
         int[] meshTriangles = mesh.triangles; //get array of vertices in order or triangles
-        for(int i = 0; i < meshTriangles.Length; i += 3)
+        for (int i = 0; i < meshTriangles.Length; i += 3)
         {
             VertexData vertexA = GetVertexData(mesh, plane, meshTriangles[i]);
             VertexData vertexB = GetVertexData(mesh, plane, meshTriangles[i + 1]);
@@ -24,10 +25,10 @@ public static class MeshSlicer
             bool isABSameSide = vertexA.Side == vertexB.Side;
             bool isBCSameSide = vertexB.Side == vertexC.Side;
 
-            if(isABSameSide && isBCSameSide)
+            if (isABSameSide && isBCSameSide)
             {
                 //if on the same side, add each vertex to positive or negative side
-                MeshConstructionHelper helper = vertexA.Side? positiveMesh : negativeMesh;
+                MeshConstructionHelper helper = vertexA.Side ? positiveMesh : negativeMesh;
                 helper.AddMeshSection(vertexA, vertexB, vertexC);
             }
             else //triangle is split between positive and negative normal plane
@@ -75,10 +76,54 @@ public static class MeshSlicer
                     helperB.AddMeshSection(vertexB, intersectionE, intersectionD);
                 }
 
+                //add new intersecting vertices to a list
+                pointsAlongPlane.Add(intersectionD);
+                pointsAlongPlane.Add(intersectionE);
+
+
             }
         }
 
+        JoinPointsAlongPlane(ref positiveMesh, ref negativeMesh, cutNormal, pointsAlongPlane);
         return new[] { positiveMesh.ConstructMesh(), negativeMesh.ConstructMesh() }; //return both new objects
+    }
+
+    private static void JoinPointsAlongPlane(ref MeshConstructionHelper positive, ref MeshConstructionHelper negative, Vector3 cutNormal, List<VertexData> pointsAlongPlane)
+    {
+        VertexData halfway = new VertexData()
+        {
+            Position = VertexUtility.GetHalfwayPoint(pointsAlongPlane)
+        };
+
+        for (int i = 0; i < pointsAlongPlane.Count; i += 2)
+        {
+
+            VertexData firstVertex = pointsAlongPlane[i];
+            VertexData secondVertex = pointsAlongPlane[i + 1];
+
+            Vector3 normal = VertexUtility.ComputeNormal(halfway, secondVertex, firstVertex);
+            halfway.Normal = Vector3.forward;
+
+            float dot = Vector3.Dot(normal, cutNormal);
+
+            //check which side of the plane normal is
+            //then add new triangle to each construction helper
+
+            if (dot > 0)
+            {
+                //if normal aligns with plane normal
+                positive.AddMeshSection(firstVertex, secondVertex, halfway);
+                negative.AddMeshSection(secondVertex, firstVertex, halfway);
+            }
+            else
+            {
+                //if normal is opposite to plane normal
+                negative.AddMeshSection(firstVertex, secondVertex, halfway);
+                positive.AddMeshSection(secondVertex, firstVertex, halfway);
+            }
+
+
+        }
     }
 
     //extracts vertex data from mesh and places in custom struct for easy use
@@ -123,11 +168,12 @@ public static class MeshSlicer
 
         return new VertexData()
         {
-            Position = result, 
+            Position = result,
             Normal = normal,
             Uv = VertexUtility.InterpolateUvs(vertexA.Uv, vertexB.Uv, t)
         };
     }
+
 }
 
 
