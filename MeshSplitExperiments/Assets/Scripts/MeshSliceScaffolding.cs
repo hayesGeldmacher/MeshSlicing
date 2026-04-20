@@ -10,6 +10,8 @@ public class MeshSliceScaffolding : MonoBehaviour
     private Vector3 _origin;
     [SerializeField]
     private Vector3 _normal;
+    [HideInInspector] public int sliceCount = 0;
+    [SerializeField] private int sliceLimit = 5;
 
     [Header("Debug")]
     [SerializeField]
@@ -36,14 +38,31 @@ public class MeshSliceScaffolding : MonoBehaviour
 
     public void SliceMesh()
     {
-        Mesh[] meshes = MeshSlicer.SliceMesh(_meshFilter.sharedMesh, _origin, _normal);
+        Mesh[] meshes = MeshSlicer.SliceMesh(_meshFilter.sharedMesh, _origin, _normal, useDifferentMat);
+
         for (int index = 0; index < meshes.Length; index++){
 
             Debug.Log("sliced mesh!");
+
             Mesh mesh = meshes[index];
             GameObject submesh = Instantiate(this.gameObject);
             if (!isPlaying) { submesh.transform.position += submesh.transform.right * 2; }
             submesh.GetComponent<MeshFilter>().sharedMesh = mesh;
+
+            if(sliceCount >= sliceLimit - 1)
+            {
+               Debug.Log("Mesh piece has reached slice limit: " + gameObject.name);
+                if(submesh.transform.TryGetComponent<MeshSliceScaffolding>(out MeshSliceScaffolding scaffold))
+                {
+                    if (isPlaying) { Destroy(scaffold); }
+                    else { DestroyImmediate(scaffold); }
+                }
+            }
+            else{
+                
+                submesh.GetComponent<MeshSliceScaffolding>().sliceCount = sliceCount + 1; //iterate on slice count
+            }
+
 
             if(submesh.transform.TryGetComponent<MeshCollider>(out MeshCollider collider))
             {
@@ -76,6 +95,9 @@ public class MeshSliceScaffolding : MonoBehaviour
                    rigid = submesh.AddComponent(typeof(Rigidbody)) as Rigidbody;
                 }
 
+                mesh.RecalculateBounds();
+                mesh.RecalculateNormals();
+
                 if (sliceForce > 0 && isPlaying)
                 {
                     Vector3 trueCenter = submesh.transform.TransformPoint(mesh.bounds.center);
@@ -86,6 +108,7 @@ public class MeshSliceScaffolding : MonoBehaviour
             }
         }
 
+
         if (isPlaying)
         {
             Destroy(gameObject); //delete the current gameobject once all copies are made
@@ -94,14 +117,18 @@ public class MeshSliceScaffolding : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         if (!_drawDebug) return;
+
         //construct new gizmos matrix taking _normal as forward position
         Gizmos.matrix = Matrix4x4.TRS(transform.position, Quaternion.LookRotation(_normal), Vector3.one);
 
+        Color colA = new Color(0, 1, 0, 0.4f);
+        Color colB = new Color(0, 1, 0, 1.0f);
+
         //draw cubes to represent the slicing plane
         Vector3 scale = transform.localScale;
-        Gizmos.color = new Color(0, 1, 0, 04f);
+        Gizmos.color = colA;
         Gizmos.DrawCube(_origin, new Vector3(2 * scale.x, 2 * scale.y, 0.01f * scale.z));
-        Gizmos.color = new Color(0, 1, 0, 1f);
+        Gizmos.color = colB;
         Gizmos.DrawWireCube(_origin, new Vector3(2 * scale.x, 2 * scale.y, 0.01f * scale.z));
     }
 }
