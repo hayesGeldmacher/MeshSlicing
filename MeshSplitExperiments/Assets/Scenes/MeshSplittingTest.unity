@@ -131,6 +131,8 @@ GameObject:
   - component: {fileID: 318403448}
   - component: {fileID: 318403447}
   - component: {fileID: 318403445}
+  - component: {fileID: 318403451}
+  - component: {fileID: 318403450}
   m_Layer: 0
   m_Name: SplitCube
   m_TagString: Untagged
@@ -152,10 +154,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MeshSliceScaffolding
   _meshFilter: {fileID: 318403448}
   _origin: {x: 0, y: 0, z: 0}
-  _normal: {x: 0.82, y: 0.5, z: 0}
+  _normal: {x: 0, y: 0.5, z: 0}
   _drawDebug: 1
   _addPhysics: 1
-  _addForce: 1
+  sliceForce: 200
+  useDifferentMat: 0
+  mat1: {fileID: 2100000, guid: e9934bf538b80004fbd4b49d55c7a13f, type: 2}
+  mat2: {fileID: 2100000, guid: 921c8b404de992449a944a596fa97d89, type: 2}
 --- !u!23 &318403447
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -181,7 +186,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2f4b5326d541fdc4d958d474f74a158c, type: 2}
+  - {fileID: 2100000, guid: e9934bf538b80004fbd4b49d55c7a13f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -228,6 +233,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 15.692, z: 0}
+--- !u!64 &318403450
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 318403444}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!54 &318403451
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 318403444}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &670970753
 GameObject:
   m_ObjectHideFlags: 0
@@ -335,7 +389,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.07, y: -0.001, z: -3.8700001}
-  m_LocalScale: {x: 5.7521772, y: 0.10756864, z: 5.7521772}
+  m_LocalScale: {x: 17.242727, y: 0.32244775, z: 17.242727}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
