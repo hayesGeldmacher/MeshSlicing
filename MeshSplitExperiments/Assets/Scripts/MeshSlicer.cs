@@ -126,6 +126,19 @@ public static class MeshSlicer
         }
     }
 
+    //gets the center of the mesh by calculating the average position of each vertex
+    public static Vector3 GetMeshCenter(Mesh mesh)
+    {
+        Vector3[] meshVertices = mesh.vertices; //get array of vertices in order or triangles
+        Vector3 averagePos = Vector3.zero;
+        for (int i = 0; i < meshVertices.Length; i += 1)
+        {
+            averagePos += meshVertices[i];
+        }
+        averagePos /= meshVertices.Length;
+        return averagePos;
+    }
+
     //extracts vertex data from mesh and places in custom struct for easy use
     private static VertexData GetVertexData(Mesh mesh, Plane plane, int index)
     {

@@ -9,6 +9,23 @@ public class MeshSliceScaffolding : MonoBehaviour
     private Vector3 _origin;
     [SerializeField]
     private Vector3 _normal;
+    [SerializeField]
+    private bool _drawDebug = false;
+
+    [Header("Physics")]
+    [SerializeField]
+    private bool _addPhysics = true;
+    [SerializeField]
+    private bool _addForce = true;
+    [Range(0.0f, 1000.0f)]
+    public float sliceForce = 200.0f;
+
+    private bool isPlaying = false; //are we playing or in-editorr?
+
+    private void Start()
+    {
+        isPlaying = true;
+    }
 
     public void SliceMesh()
     {
@@ -18,13 +35,45 @@ public class MeshSliceScaffolding : MonoBehaviour
             Debug.Log("sliced mesh!");
             Mesh mesh = meshes[index];
             GameObject submesh = Instantiate(this.gameObject);
-            submesh.gameObject.transform.position += (2 * transform.right);
+            if (!isPlaying) { submesh.transform.position += submesh.transform.right * 2; }
             submesh.GetComponent<MeshFilter>().sharedMesh = mesh;
-            
+            if(submesh.TryGetComponent<MeshCollider>(out MeshCollider collider))
+            {
+                if (isPlaying) { Destroy(collider); }
+                else { DestroyImmediate(collider); }
+            }
+            if(submesh.TryGetComponent<Rigidbody>(out Rigidbody rb))
+            {
+                if (isPlaying) { Destroy(rb); }
+                else { DestroyImmediate(rb); }
+            }
+
+            if (_addPhysics)
+            {
+                MeshCollider newCollider = submesh.AddComponent(typeof(MeshCollider)) as MeshCollider;
+                newCollider.sharedMesh = mesh;
+                newCollider.convex = true;
+
+                Rigidbody rigid = submesh.AddComponent(typeof(Rigidbody)) as Rigidbody;
+
+                if (_addForce && isPlaying)
+                {
+                    Vector3 trueCenter = submesh.transform.TransformPoint(mesh.bounds.center);
+                    Vector3 targetDir = (transform.position - trueCenter) * -1;
+                    targetDir.Normalize();
+                    rigid.AddForce(targetDir * sliceForce);
+                }
+            }
+        }
+
+        if (isPlaying)
+        {
+            Destroy(gameObject); //delete the current gameobject once all copies are made
         }
     }
     private void OnDrawGizmosSelected()
     {
+        if (!_drawDebug) return;
         //construct new gizmos matrix taking _normal as forward position
         Gizmos.matrix = Matrix4x4.TRS(transform.position, Quaternion.LookRotation(_normal), Vector3.one);
 
@@ -37,6 +86,8 @@ public class MeshSliceScaffolding : MonoBehaviour
         //set matrix to object matrix and draw all normals
         Gizmos.color = Color.blue;
         Gizmos.matrix = transform.localToWorldMatrix;
+
+        if(_meshFilter == null) { return; }
         for(int i = 0; i < _meshFilter.sharedMesh.normals.Length; i++)
         {
             Vector3 normal = _meshFilter.sharedMesh.normals[i];
@@ -44,17 +95,5 @@ public class MeshSliceScaffolding : MonoBehaviour
             Gizmos.DrawLine(vertex, vertex +  normal);
         }
 
-    }
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }
