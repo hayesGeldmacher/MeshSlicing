@@ -85,7 +85,9 @@ public class MeshSliceScaffolding : MonoBehaviour
 
     public GameObject[] SliceMesh()
     {
-        Mesh[] meshes = MeshSlicer.SliceMesh(_meshFilter.sharedMesh, _origin + offsetCenter, _normal, useDifferentMat);
+
+        CheckForZeroRotation();
+            Mesh[] meshes = MeshSlicer.SliceMesh(_meshFilter.sharedMesh, _origin + offsetCenter, _normal, useDifferentMat);
         List<GameObject> meshObjects = new List<GameObject>();
         for (int index = 0; index < meshes.Length; index++){
 
@@ -141,13 +143,51 @@ public class MeshSliceScaffolding : MonoBehaviour
             }
             meshObjects.Add(submesh);
         }
+        
         return meshObjects.ToArray();
+    }
+
+    private void CheckForZeroRotation()
+    {
+        bool foundZeroRotation = false;
+        if (_normal.x + _normal.y == 0)
+        {
+            normalX += (Random.value < .5 ? 0.1f : -0.1f);
+            normalY += (Random.value < .5 ? 0.1f : -0.1f);
+            _normal.x = normalX;
+            _normal.y = normalY;
+            foundZeroRotation = true;
+        }
+        else if (_normal.x + _normal.z == 0)
+        {
+            normalX += (Random.value < .5 ? 0.1f : -0.1f);
+            normalZ += (Random.value < .5 ? 0.1f : -0.1f);
+            _normal.x = normalX;
+            _normal.z = normalZ;
+            foundZeroRotation = true;
+        }
+        else if(_normal.y + _normal.z == 0)
+        {
+            normalY += (Random.value < .5 ? 0.1f : -0.1f);
+            normalZ += (Random.value < .5 ? 0.1f : -0.1f);
+            _normal.y = normalY;
+            _normal.z = normalZ;
+            foundZeroRotation = true;
+        }
+
+        if (foundZeroRotation) { Debug.Log("Tried to slice at zero rotation, tweaked cut angle"); }
+
     }
 
     private void InitializeMesh()
     {
+
         offsetCenter = _meshFilter.sharedMesh.bounds.center;
-        _origin = offsetCenter;
+        Debug.Log("Offset center for: " + gameObject.name + " " + offsetCenter);
+        normalX = Random.Range(0.1f, 1.0f) * (Random.value < .5 ? 1 : -1);
+        normalZ = Random.Range(0.1f, 1.0f) * (Random.value < .5 ? 1 : -1);
+        normalY = Random.Range(0.1f, 1.0f) * (Random.value < .5 ? 1 : -1);
+        _origin = Vector3.zero;
     }
 
     private void AssignMaterials(ref GameObject submesh)
