@@ -152,9 +152,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MeshSliceScaffolding
   _meshFilter: {fileID: 318403448}
   _origin: {x: 0, y: 0, z: 0}
-  _normal: {x: 0.28, y: 0.5, z: 0}
+  normalX: 0
+  normalY: 0
+  normalZ: 0
+  _normal: {x: 0, y: 0, z: 0}
   sliceCount: 0
-  sliceLimit: 3
+  sliceLimit: 4
   _drawDebug: 1
   _addPhysics: 1
   sliceForce: 200

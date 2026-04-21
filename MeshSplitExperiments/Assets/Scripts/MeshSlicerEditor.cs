@@ -14,7 +14,14 @@ public class MeshSlicerEditor : Editor
         if(GUILayout.Button("Slice Mesh"))
         {
             Undo.RecordObject(meshSlicer, "Slice");
-            meshSlicer.SliceMesh();
+            meshSlicer.StartSlice();
+            EditorUtility.SetDirty(meshSlicer);
+        }
+
+        if(GUILayout.Button("Burst Mesh"))
+        {
+            Undo.RecordObject(meshSlicer, "Burst");
+            meshSlicer.StartBurst();
             EditorUtility.SetDirty(meshSlicer);
         }
     }

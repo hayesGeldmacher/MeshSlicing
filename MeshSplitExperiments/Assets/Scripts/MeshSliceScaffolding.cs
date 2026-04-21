@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class MeshSliceScaffolding : MonoBehaviour
 {
@@ -8,8 +9,20 @@ public class MeshSliceScaffolding : MonoBehaviour
     private MeshFilter _meshFilter;
     [SerializeField]
     private Vector3 _origin;
+
+    [Range(-1.0f, 1.0f)]
+    public float normalX;
+
+    [Range(-1.0f, 1.0f)]
+    public float normalY;
+
+    [Range(-1.0f, 1.0f)]
+    public float normalZ;
+
+
     [SerializeField]
     private Vector3 _normal;
+    private Vector3 offsetCenter = Vector3.zero;
     [HideInInspector] public int sliceCount = 0;
     [SerializeField] private int sliceLimit = 5;
 
@@ -29,6 +42,7 @@ public class MeshSliceScaffolding : MonoBehaviour
     [SerializeField] private Material mat1;
     [SerializeField] private Material mat2;
 
+
     private bool isPlaying = false; //are we playing or in-editorr?
 
     private void Start()
@@ -36,10 +50,43 @@ public class MeshSliceScaffolding : MonoBehaviour
         isPlaying = true;
     }
 
-    public void SliceMesh()
+    private void Update()
     {
-        Mesh[] meshes = MeshSlicer.SliceMesh(_meshFilter.sharedMesh, _origin, _normal, useDifferentMat);
 
+        _normal = new Vector3(normalX, normalY, normalZ);
+    }
+
+    public void StartSlice()
+    {
+        SliceMesh();
+        if (isPlaying)
+        {
+            Destroy(gameObject); //delete the current gameobject once all copies are made
+        }
+    }
+
+    public void StartBurst()
+    {
+        GameObject[] meshes = SliceMesh();
+        for(int index = 0; index < meshes.Length; index++)
+        {
+            GameObject subObject = meshes[index];
+            if(subObject.transform.TryGetComponent<MeshSliceScaffolding>(out MeshSliceScaffolding scaffold))
+            {
+               scaffold.StartSlice();
+            }
+          
+        }
+        if (isPlaying)
+        {
+            Destroy(gameObject); //delete the current gameobject once all copies are made
+        }
+    }
+
+    public GameObject[] SliceMesh()
+    {
+        Mesh[] meshes = MeshSlicer.SliceMesh(_meshFilter.sharedMesh, _origin + offsetCenter, _normal, useDifferentMat);
+        List<GameObject> meshObjects = new List<GameObject>();
         for (int index = 0; index < meshes.Length; index++){
 
             Debug.Log("sliced mesh!");
@@ -67,8 +114,10 @@ public class MeshSliceScaffolding : MonoBehaviour
                 }
             }
             else{
-                
-                submesh.GetComponent<MeshSliceScaffolding>().sliceCount = sliceCount + 1; //iterate on slice count
+
+                MeshSliceScaffolding scaffold = submesh.GetComponent<MeshSliceScaffolding>();
+                scaffold.sliceCount = sliceCount + 1; //iterate on slice count
+                scaffold.InitializeMesh();
             }
 
             if(submesh.transform.TryGetComponent<MeshCollider>(out MeshCollider collider))
@@ -90,16 +139,16 @@ public class MeshSliceScaffolding : MonoBehaviour
             {
                 CalculatePhysics(ref submesh, ref mesh);
             }
-
+            meshObjects.Add(submesh);
         }
-
-
-        if (isPlaying)
-        {
-            Destroy(gameObject); //delete the current gameobject once all copies are made
-        }
+        return meshObjects.ToArray();
     }
 
+    private void InitializeMesh()
+    {
+        offsetCenter = _meshFilter.sharedMesh.bounds.center;
+        _origin = offsetCenter;
+    }
 
     private void AssignMaterials(ref GameObject submesh)
     {
@@ -147,8 +196,8 @@ public class MeshSliceScaffolding : MonoBehaviour
         //draw cubes to represent the slicing plane
         Vector3 scale = transform.localScale;
         Gizmos.color = colA;
-        Gizmos.DrawCube(_origin, new Vector3(2 * scale.x, 2 * scale.y, 0.01f * scale.z));
+        Gizmos.DrawCube(_origin + offsetCenter, new Vector3(2 * scale.x, 2 * scale.y, 0.01f * scale.z));
         Gizmos.color = colB;
-        Gizmos.DrawWireCube(_origin, new Vector3(2 * scale.x, 2 * scale.y, 0.01f * scale.z));
+        Gizmos.DrawWireCube(_origin + offsetCenter, new Vector3(2 * scale.x, 2 * scale.y, 0.01f * scale.z));
     }
 }
