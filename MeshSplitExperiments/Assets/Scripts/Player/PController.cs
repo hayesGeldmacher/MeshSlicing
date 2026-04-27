@@ -4,7 +4,6 @@ using System.Collections.Generic;
 [RequireComponent(typeof(CharacterController))]
 public class PController : MonoBehaviour
 {
-
     [Header("Player Movement")]
     
     //movement speeds
@@ -35,11 +34,10 @@ public class PController : MonoBehaviour
     //standard movement update
     private void MoveUpdate()
     {
-
         float speed = moveSpeeds[(int)moveState];
 
         Vector3 moveDirection = (transform.right * inputX + transform.forward * inputZ);
-
+        moveDirection.Normalize();
         //controller.move is how the character actually moves - always multiply by Time.deltaTime so physics work correctly!
         controller.Move(moveDirection * speed * Time.deltaTime);
         //_controller.Move(_velocity * Time.deltaTime);
@@ -48,10 +46,11 @@ public class PController : MonoBehaviour
 
     private void CheckMoveState()
     {
-        inputX = Input.GetAxis("Horizontal");
-        inputZ = Input.GetAxis("Vertical");
+        inputX = Input.GetAxisRaw("Horizontal");
+       
+        inputZ = Input.GetAxisRaw("Vertical");
 
-        isMovingInput = ((Mathf.Abs(inputX + inputZ)) >= 0.1f) ? true : false;
+        isMovingInput = ((Mathf.Abs(inputX) + Mathf.Abs(inputZ)) >= 0.1f) ? true : false;
         if (isMovingInput)
         {
             bool isHoldingRun = (Input.GetButton("run")) ? true : false;
@@ -79,5 +78,15 @@ public class PController : MonoBehaviour
                 //player is runnign
                 MoveUpdate(); break;
         }
+    }
+
+    public float GetXMovement()
+    {
+        return inputX;
+    }
+    
+    public float GetZMovement()
+    {
+        return inputZ;
     }
 }
