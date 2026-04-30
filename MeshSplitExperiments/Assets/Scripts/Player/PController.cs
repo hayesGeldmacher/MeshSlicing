@@ -15,13 +15,46 @@ public class PController : MonoBehaviour
     [SerializeField] private float inputX; //receives player input
     [SerializeField] private float inputZ; //receives player input
     [SerializeField] private bool isMovingInput = false; //is player moving
+    [SerializeField] private float storedSpeed; //stored movement from last frame
+    [SerializeField] private float storedDecayRate; //how fast does stored movement decay
 
     [HideInInspector] public enum enMoveState {STILL, WALKING, RUNNING}
     public enMoveState moveState; //tracks current player state
 
     private CharacterController controller; //private movement component
-    
-    
+
+    [Header("Jumping")]
+    [SerializeField] private Transform groundCheck;
+    private float groundCheckRange = 0.7f;
+    [SerializeField] private LayerMask groundMask;
+    [SerializeField] private bool isGrounded = true;
+    [SerializeField] private float jumpTimer = 0.4f;
+    [SerializeField] private float jumpCoolDown = 0.0f;
+
+    [SerializeField] private float jumpStrength;
+    [SerializeField] private float gravityStrength;
+    [SerializeField] private float velocity;
+    [SerializeField] private float minVelocity; //the strongest it can pull down
+
+    private bool aimFrozen = false;
+
+    #region Singleton
+
+    public static PController instance;
+
+    void Awake()
+    {
+        if (instance != null)
+        {
+            Debug.LogWarning("More than one instance of playercontroller present in scene");
+            return;
+        }
+
+        instance = this;
+    }
+
+    #endregion
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -31,26 +64,66 @@ public class PController : MonoBehaviour
         moveSpeeds.Add(runSpeed);
     }
 
+    private void GroundedUpdate()
+    {
+        RaycastHit hit;
+        isGrounded = Physics.Raycast(groundCheck.position, Vector3.down, out hit, groundCheckRange, groundMask);
+    }
+
+    private void GravityUpdate()
+    {
+        velocity -= gravityStrength * Time.deltaTime;
+        if (velocity < minVelocity) { velocity = minVelocity; }
+        Vector3 downMovement = Vector3.up * velocity;
+        controller.Move(downMovement * Time.deltaTime);
+
+        jumpTimer -= Time.deltaTime;
+    }
+
+    private void Jump()
+    {
+        velocity = jumpStrength;
+        jumpCoolDown = jumpTimer;
+    }
+
+    private void JumpUpdate()
+    {
+        if (Input.GetButtonDown("Jump") && jumpCoolDown <= 0.0f) { Jump(); }
+    }
+
     //standard movement update
     private void MoveUpdate()
     {
-        float speed = moveSpeeds[(int)moveState];
-
+        if (isGrounded)
+        {
+            storedSpeed = moveSpeeds[(int)moveState];
+        }
+        else
+        {
+            storedSpeed -= storedDecayRate * Time.deltaTime;
+            if (storedSpeed < 0.0f) { storedSpeed = 0.0f; }
+        }
+        
         Vector3 moveDirection = (transform.right * inputX + transform.forward * inputZ);
         moveDirection.Normalize();
         //controller.move is how the character actually moves - always multiply by Time.deltaTime so physics work correctly!
-        controller.Move(moveDirection * speed * Time.deltaTime);
-        //_controller.Move(_velocity * Time.deltaTime);
-
+        controller.Move(moveDirection * storedSpeed * Time.deltaTime);
     }
 
     private void CheckMoveState()
     {
-        inputX = Input.GetAxisRaw("Horizontal");
-       
-        inputZ = Input.GetAxisRaw("Vertical");
+        if (!aimFrozen)
+        {
+            inputX = Input.GetAxisRaw("Horizontal");
+            inputZ = Input.GetAxisRaw("Vertical");
+        }
+        else
+        {
+            inputX = 0;
+            inputZ = 0;
+        }
 
-        isMovingInput = ((Mathf.Abs(inputX) + Mathf.Abs(inputZ)) >= 0.1f) ? true : false;
+            isMovingInput = ((Mathf.Abs(inputX) + Mathf.Abs(inputZ)) >= 0.1f) ? true : false;
         if (isMovingInput)
         {
             bool isHoldingRun = (Input.GetButton("run")) ? true : false;
@@ -78,6 +151,10 @@ public class PController : MonoBehaviour
                 //player is runnign
                 MoveUpdate(); break;
         }
+
+        GroundedUpdate();
+        if (isGrounded) { JumpUpdate(); }
+        GravityUpdate();
     }
 
     public float GetXMovement()
@@ -88,5 +165,15 @@ public class PController : MonoBehaviour
     public float GetZMovement()
     {
         return inputZ;
+    }
+
+    public void SetAimFrozen(bool frozen)
+    {
+        aimFrozen = frozen;
+    }
+
+    public bool GetGrounded()
+    {
+        return isGrounded;
     }
 }

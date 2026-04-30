@@ -29,6 +29,25 @@ public class CamController : MonoBehaviour
     [SerializeField] private PController playerController;
     [SerializeField] private Transform cameraHolder;
 
+    private bool aimFrozen = false;
+
+    #region Singleton
+
+    public static CamController instance;
+
+    void Awake()
+    {
+        if (instance != null)
+        {
+            Debug.LogWarning("More than one instance of camera controller present in scene!");
+            return;
+        }
+
+        instance = this;
+    }
+
+    #endregion
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -108,6 +127,7 @@ public class CamController : MonoBehaviour
     {
         float mouseX = Input.GetAxis("ControllerX") * sensitivityX;
         float mouseY = Input.GetAxis("ControllerY") * sensitivityY;
+        if (aimFrozen) { mouseX = 0; mouseY = 0; }
 
         movingLook = (Mathf.Abs(mouseX) + Mathf.Abs(mouseY) >= 0.1f) ? true : false;
 
@@ -121,5 +141,10 @@ public class CamController : MonoBehaviour
         //This rotates the camera holder up and down when the player walks forward or backward
         cameraHolder.localRotation = Quaternion.Euler(rotationForward, 0f, 0f);
 
+    }
+
+    public void SetAimFrozen(bool frozen)
+    {
+        aimFrozen = frozen;
     }
 }
