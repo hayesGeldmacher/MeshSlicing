@@ -10,6 +10,8 @@ public class MeshSliceScaffolding : MonoBehaviour
     private MeshFilter _meshFilter;
     [SerializeField]
     private Vector3 _origin;
+    [SerializeField] protected bool isSkinned = false;
+    [SerializeField] protected SkinnedMeshRenderer skinMesh;
 
     [Range(-1.0f, 1.0f)]
     public float normalX;
@@ -30,6 +32,7 @@ public class MeshSliceScaffolding : MonoBehaviour
     [Header("Debug")]
     [SerializeField]
     private bool _drawDebug = false;
+    [SerializeField] protected float planeScaleMult = 1.0f;
 
     [Header("Physics")]
     [SerializeField]
@@ -94,7 +97,11 @@ public class MeshSliceScaffolding : MonoBehaviour
     public GameObject[] SliceMesh()
     {
         CheckForZeroRotation();
-            Mesh[] meshes = MeshSlicer.SliceMesh(_meshFilter.sharedMesh, _origin + offsetCenter, _normal, useDifferentMat);
+        Mesh sliceMesh;
+        
+        if (isSkinned) { sliceMesh = skinMesh.sharedMesh; }
+        else { sliceMesh = _meshFilter.sharedMesh; }
+            Mesh[] meshes = MeshSlicer.SliceMesh(sliceMesh, _origin + offsetCenter, _normal, useDifferentMat);
         List<GameObject> meshObjects = new List<GameObject>();
         for (int index = 0; index < meshes.Length; index++){
 
@@ -104,17 +111,20 @@ public class MeshSliceScaffolding : MonoBehaviour
             Mesh mesh = meshes[index];
             GameObject submesh = Instantiate(this.gameObject);
             if (!isPlaying) { submesh.transform.position += submesh.transform.right * 2; }
-            submesh.GetComponent<MeshFilter>().sharedMesh = mesh;
 
-            if (useDifferentMat && mat1 != null && mat2 != null) {
 
-                AssignMaterials(ref submesh);
+            if (isSkinned)
+            {
+                MeshFilter filter = submesh.AddComponent(typeof(MeshFilter)) as MeshFilter;
+                filter.sharedMesh = mesh;
+
+                MeshRenderer render = submesh.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
+                //submesh.GetComponent<SkinnedMeshRenderer>().sharedMesh = mesh; 
             }
+            else { submesh.GetComponent<MeshFilter>().sharedMesh = mesh; }
 
-            mesh.RecalculateBounds();
-            mesh.RecalculateNormals();
 
-            if(sliceCount >= sliceLimit - 1)
+            if (sliceCount >= sliceLimit - 1)
             {
                Debug.Log("Mesh piece has reached slice limit: " + gameObject.name);
                 if(submesh.transform.TryGetComponent<MeshSliceScaffolding>(out MeshSliceScaffolding scaffold))
@@ -128,8 +138,23 @@ public class MeshSliceScaffolding : MonoBehaviour
 
                 MeshSliceScaffolding scaffold = submesh.GetComponent<MeshSliceScaffolding>();
                 scaffold.sliceCount = sliceCount + 1; //iterate on slice count
+                if (isSkinned) { 
+                    scaffold.DisableSkinned();
+                    scaffold.AssignMeshFilter();
+                }
                 scaffold.InitializeMesh();
             }
+
+               
+
+            if (useDifferentMat && mat1 != null && mat2 != null) {
+
+                AssignMaterials(ref submesh);
+            }
+
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+
 
             if(submesh.transform.TryGetComponent<MeshCollider>(out MeshCollider collider))
             {
@@ -217,8 +242,9 @@ public class MeshSliceScaffolding : MonoBehaviour
 
     private void InitializeMesh()
     {
-
-        offsetCenter = _meshFilter.sharedMesh.bounds.center;
+        if (isSkinned) { offsetCenter = skinMesh.sharedMesh.bounds.center; }
+        else { offsetCenter = _meshFilter.sharedMesh.bounds.center; }
+           
         Debug.Log("Offset center for: " + gameObject.name + " " + offsetCenter);
         normalX = Random.Range(0.1f, 1.0f) * (Random.value < .5 ? 1 : -1);
         normalZ = Random.Range(0.1f, 1.0f) * (Random.value < .5 ? 1 : -1);
@@ -276,10 +302,20 @@ public class MeshSliceScaffolding : MonoBehaviour
         Color colB = new Color(0, 1, 0, 1.0f);
 
         //draw cubes to represent the slicing plane
-        Vector3 scale = transform.localScale;
+        Vector3 scale = transform.localScale * planeScaleMult;
         Gizmos.color = colA;
         Gizmos.DrawCube(_origin + offsetCenter, new Vector3(2 * scale.x, 2 * scale.y, 0.01f * scale.z));
         Gizmos.color = colB;
         Gizmos.DrawWireCube(_origin + offsetCenter, new Vector3(2 * scale.x, 2 * scale.y, 0.01f * scale.z));
+    }
+
+    public void DisableSkinned()
+    {
+        isSkinned = false;
+    }
+
+    public void AssignMeshFilter()
+    {
+        _meshFilter = GetComponent<MeshFilter>();
     }
 }
