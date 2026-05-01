@@ -42,6 +42,11 @@ public class MeshSliceScaffolding : MonoBehaviour
     [SerializeField] private Material mat1;
     [SerializeField] private Material mat2;
 
+    [Header("Layers")]
+    [SerializeField] private LayerMask debrisMask;
+    [SerializeField] protected string debrisLayerName = "debris";
+   
+
 
     private bool isPlaying = false; //are we playing or in-editorr?
 
@@ -73,6 +78,7 @@ public class MeshSliceScaffolding : MonoBehaviour
             GameObject subObject = meshes[index];
             if(subObject.transform.TryGetComponent<MeshSliceScaffolding>(out MeshSliceScaffolding scaffold))
             {
+               scaffold.RandomizeRotation();
                scaffold.StartSlice();
             }
           
@@ -90,6 +96,7 @@ public class MeshSliceScaffolding : MonoBehaviour
             Mesh[] meshes = MeshSlicer.SliceMesh(_meshFilter.sharedMesh, _origin + offsetCenter, _normal, useDifferentMat);
         List<GameObject> meshObjects = new List<GameObject>();
         for (int index = 0; index < meshes.Length; index++){
+
 
             Debug.Log("sliced mesh!");
 
@@ -114,6 +121,7 @@ public class MeshSliceScaffolding : MonoBehaviour
                     if (isPlaying) { Destroy(scaffold); }
                     else { DestroyImmediate(scaffold); }
                 }
+                submesh.layer = LayerMask.NameToLayer(debrisLayerName);
             }
             else{
 
@@ -127,6 +135,14 @@ public class MeshSliceScaffolding : MonoBehaviour
                 if (isPlaying) { Destroy(collider); }
                 else { DestroyImmediate(collider); }
             }
+
+
+            if (submesh.transform.TryGetComponent<Hurtable>(out Hurtable hurt))
+            {
+                if (isPlaying) { Destroy(hurt); }
+                else { DestroyImmediate(hurt); }
+            }
+
 
             if (!_addPhysics)
             {
@@ -145,6 +161,16 @@ public class MeshSliceScaffolding : MonoBehaviour
         }
         
         return meshObjects.ToArray();
+    }
+
+    private void RandomizeRotation()
+    {
+        normalX = Random.Range(-1.0f, 1.0f);
+        normalY = Random.Range(-1.0f, 1.0f);
+        normalZ = Random.Range(-1.0f, 1.0f);
+        _normal.x = normalX;
+        _normal.y = normalY;
+        _normal.z = normalZ;
     }
 
     private void CheckForZeroRotation()

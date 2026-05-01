@@ -65,9 +65,9 @@ public class GunBase : MonoBehaviour
             {
                 hurt.TakeDamage(damage);
             }
-            else
+            else if(hitObject.TryGetComponent<MeshSliceScaffolding>(out MeshSliceScaffolding scaffold))
             {
-                Debug.Log("Shot object has no hurtable component");
+                scaffold.StartSlice();
             }
         }
     }

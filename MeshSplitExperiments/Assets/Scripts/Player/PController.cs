@@ -176,4 +176,26 @@ public class PController : MonoBehaviour
     {
         return isGrounded;
     }
+
+    //rigidbody collisions
+    void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+
+
+        Rigidbody body = hit.collider.attachedRigidbody;
+
+        //no rigidbody 
+        if(body == null || body.isKinematic) { return; }
+
+        Debug.Log("COllided");
+        Vector3 direction = transform.position - hit.gameObject.transform.position;
+        //dont' wanna push objects below us
+        //if(hit.moveDirection.y < 0.8f) { Debug.Log("Hit direction too low!");  return; }
+
+        //calculate push direction from move direction
+        //only push obects to the sides, never up and down
+        var pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
+
+        body.linearVelocity = pushDir * 5;
+    }
 }

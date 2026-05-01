@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[RequireComponent(typeof(MeshSliceScaffolding))]
 public class HurtableProp : Hurtable
 {
     
@@ -32,6 +31,7 @@ public class HurtableProp : Hurtable
     protected override void Die()
     {
         base.Die();
+        if(scaffolding == null) { Destroy(gameObject); return; }
         switch (explodeState) { 
         
             case enExplosionState.NONE:
