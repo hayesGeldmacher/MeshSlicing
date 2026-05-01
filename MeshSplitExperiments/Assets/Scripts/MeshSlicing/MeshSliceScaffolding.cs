@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+
 public class MeshSliceScaffolding : MonoBehaviour
 {
 
@@ -239,13 +240,19 @@ public class MeshSliceScaffolding : MonoBehaviour
             rigid = submesh.AddComponent(typeof(Rigidbody)) as Rigidbody;
         }
 
-        if (sliceForce > 0 && isPlaying)
+        SlicedObjectPhysics physics;
+        if (submesh.transform.TryGetComponent<SlicedObjectPhysics>(out SlicedObjectPhysics sob))
         {
-            Vector3 trueCenter = submesh.transform.TransformPoint(mesh.bounds.center);
-            Vector3 targetDir = (transform.position - trueCenter) * -1;
-            targetDir.Normalize();
-            rigid.AddForce(targetDir * sliceForce);
+            physics = sob;
+            
         }
+        else
+        {
+           physics = submesh.AddComponent(typeof(SlicedObjectPhysics)) as SlicedObjectPhysics;
+        }
+        physics.Initialize(ref rigid, sliceForce, ref mesh);
+        physics.CallRigidExplosion();
+        return;
     }
 
 

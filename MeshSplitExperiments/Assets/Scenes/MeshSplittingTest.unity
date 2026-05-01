@@ -1720,7 +1720,7 @@ MonoBehaviour:
   normalZ: 0.446
   _normal: {x: 0, y: 0, z: 0}
   sliceCount: 0
-  sliceLimit: 1
+  sliceLimit: 2
   _drawDebug: 1
   _addPhysics: 1
   sliceForce: 200
@@ -1839,7 +1839,7 @@ MonoBehaviour:
   maxHealth: 10
   health: 0
   dead: 0
-  explodeState: 1
+  explodeState: 2
 --- !u!1 &388665791 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 03822d5d50d52d844a3e2caeba32e273, type: 3}
