@@ -92,6 +92,7 @@ public class GunBase : MonoBehaviour
         if (enter)
         {
             aiming = true;
+            gunAnim.SetBool("aiming", true);
             Debug.Log("Entered Aim Mode");
             PController.instance.SetAimFrozen(true);
             CamController.instance.SetAimFrozen(true);
@@ -100,6 +101,7 @@ public class GunBase : MonoBehaviour
         else
         {
             aiming = false;
+            gunAnim.SetBool("aiming", false);
             Debug.Log("Exited Aim Mode");
             PController.instance.SetAimFrozen(false);
             CamController.instance.SetAimFrozen(false);
