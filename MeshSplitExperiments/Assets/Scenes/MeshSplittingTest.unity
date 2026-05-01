@@ -1731,6 +1731,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   debrisLayerName: debris
+  removeComponents: 1
 --- !u!23 &318403447
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2863,6 +2864,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   debrisLayerName: debris
+  removeComponents: 0
 --- !u!23 &1664276111
 MeshRenderer:
   m_ObjectHideFlags: 0

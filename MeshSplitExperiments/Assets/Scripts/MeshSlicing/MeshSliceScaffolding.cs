@@ -46,7 +46,8 @@ public class MeshSliceScaffolding : MonoBehaviour
     [Header("Layers")]
     [SerializeField] private LayerMask debrisMask;
     [SerializeField] protected string debrisLayerName = "debris";
-   
+
+    public bool removeComponents = false;
 
 
     private bool isPlaying = false; //are we playing or in-editorr?
@@ -92,7 +93,6 @@ public class MeshSliceScaffolding : MonoBehaviour
 
     public GameObject[] SliceMesh()
     {
-
         CheckForZeroRotation();
             Mesh[] meshes = MeshSlicer.SliceMesh(_meshFilter.sharedMesh, _origin + offsetCenter, _normal, useDifferentMat);
         List<GameObject> meshObjects = new List<GameObject>();
@@ -147,18 +147,14 @@ public class MeshSliceScaffolding : MonoBehaviour
 
             if (!_addPhysics)
             {
-                if(submesh.transform.TryGetComponent<Rigidbody>(out Rigidbody rb))
-                {
-                    Debug.Log("got rigidbody for: " + submesh.name);
-                    if (isPlaying) { Destroy(rb); }
-                    else { DestroyImmediate(rb); }
-                }
+                Removecomponents(ref submesh);
             }
             else
             {
                 CalculatePhysics(ref submesh, ref mesh);
             }
             meshObjects.Add(submesh);
+            
         }
         
         return meshObjects.ToArray();
@@ -204,6 +200,19 @@ public class MeshSliceScaffolding : MonoBehaviour
 
         if (foundZeroRotation) { Debug.Log("Tried to slice at zero rotation, tweaked cut angle"); }
 
+    }
+
+    private void Removecomponents(ref GameObject subMesh)
+    {
+        foreach (var comp in subMesh.transform.GetComponents<Component>())
+        {
+            if(!(comp is Transform || comp is MeshSliceScaffolding|| 
+                comp is MeshRenderer || comp is MeshFilter))
+            {
+                if (isPlaying) { Destroy(comp); }
+                else { DestroyImmediate(comp); }
+            }
+        }
     }
 
     private void InitializeMesh()
