@@ -99,6 +99,7 @@ public class MeshSliceScaffolding : MonoBehaviour
         CheckForZeroRotation();
         Mesh sliceMesh;
         
+        
         if (isSkinned) { sliceMesh = skinMesh.sharedMesh; }
         else { sliceMesh = _meshFilter.sharedMesh; }
             Mesh[] meshes = MeshSlicer.SliceMesh(sliceMesh, _origin + offsetCenter, _normal, useDifferentMat);
@@ -112,17 +113,24 @@ public class MeshSliceScaffolding : MonoBehaviour
             GameObject submesh = Instantiate(this.gameObject);
             if (!isPlaying) { submesh.transform.position += submesh.transform.right * 2; }
 
-
-            if (isSkinned)
-            {
-                MeshFilter filter = submesh.AddComponent(typeof(MeshFilter)) as MeshFilter;
-                filter.sharedMesh = mesh;
-
-                MeshRenderer render = submesh.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
-                //submesh.GetComponent<SkinnedMeshRenderer>().sharedMesh = mesh; 
+            if(submesh.transform.TryGetComponent<MeshFilter>(out MeshFilter filter)){
+               filter.sharedMesh = mesh;
             }
-            else { submesh.GetComponent<MeshFilter>().sharedMesh = mesh; }
+            else
+            {
+                MeshFilter newFilter = submesh.AddComponent(typeof(MeshFilter)) as MeshFilter;
+                newFilter.sharedMesh = mesh;
+            }
 
+            if(!(submesh.transform.TryGetComponent<MeshRenderer>(out MeshRenderer render)))
+            {
+                MeshRenderer newRender = submesh.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
+                Material[] mat = skinMesh.sharedMaterials;
+                newRender.sharedMaterials = mat;
+            }
+            
+            submesh.transform.localScale = transform.lossyScale;
+            submesh.transform.position = transform.position;
 
             if (sliceCount >= sliceLimit - 1)
             {

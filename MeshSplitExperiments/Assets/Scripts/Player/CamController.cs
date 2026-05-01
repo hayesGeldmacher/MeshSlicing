@@ -8,6 +8,7 @@ public class CamController : MonoBehaviour
     [Header("Look Fields")]
     [SerializeField] private float sensitivityX;
     [SerializeField] private float sensitivityY;
+    [SerializeField] private float aimMult = 0.2f;
     private bool movingLook = false;
     private bool canLook = true;
 
@@ -142,7 +143,9 @@ public class CamController : MonoBehaviour
     {
         float mouseX = Input.GetAxis("ControllerX") * sensitivityX;
         float mouseY = Input.GetAxis("ControllerY") * sensitivityY;
-        if (aimFrozen) { mouseX = 0; mouseY = 0; }
+
+        if (aimFrozen) { mouseX *= aimMult; mouseY *= aimMult; }
+    
         if (isChangingFOV) { ChangeFOV(); }
         movingLook = (Mathf.Abs(mouseX) + Mathf.Abs(mouseY) >= 0.1f) ? true : false;
 

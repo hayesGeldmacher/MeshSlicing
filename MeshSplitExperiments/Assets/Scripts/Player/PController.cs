@@ -9,6 +9,7 @@ public class PController : MonoBehaviour
     //movement speeds
     [SerializeField] private float walkSpeed;
     [SerializeField] private float runSpeed;
+    [SerializeField] private float aimSpeed;
     private List<float> moveSpeeds = new List<float>(); //list of speeds, list for quick access
 
     //player input fields, not visible to inspector
@@ -18,7 +19,7 @@ public class PController : MonoBehaviour
     [SerializeField] private float storedSpeed; //stored movement from last frame
     [SerializeField] private float storedDecayRate; //how fast does stored movement decay
 
-    [HideInInspector] public enum enMoveState {STILL, WALKING, RUNNING}
+    [HideInInspector] public enum enMoveState {STILL, AIMING, WALKING, RUNNING}
     public enMoveState moveState; //tracks current player state
 
     private CharacterController controller; //private movement component
@@ -60,6 +61,7 @@ public class PController : MonoBehaviour
     {
         controller = transform.GetComponent<CharacterController>();
         moveSpeeds.Add(0);
+        moveSpeeds.Add(aimSpeed);
         moveSpeeds.Add(walkSpeed);
         moveSpeeds.Add(runSpeed);
     }
@@ -103,7 +105,9 @@ public class PController : MonoBehaviour
             storedSpeed -= storedDecayRate * Time.deltaTime;
             if (storedSpeed < 0.0f) { storedSpeed = 0.0f; }
         }
+
         
+
         Vector3 moveDirection = (transform.right * inputX + transform.forward * inputZ);
         moveDirection.Normalize();
         //controller.move is how the character actually moves - always multiply by Time.deltaTime so physics work correctly!
@@ -112,20 +116,15 @@ public class PController : MonoBehaviour
 
     private void CheckMoveState()
     {
-        if (!aimFrozen)
-        {
-            inputX = Input.GetAxisRaw("Horizontal");
-            inputZ = Input.GetAxisRaw("Vertical");
-        }
-        else
-        {
-            inputX = 0;
-            inputZ = 0;
-        }
+      
+         inputX = Input.GetAxisRaw("Horizontal");
+         inputZ = Input.GetAxisRaw("Vertical");
 
-            isMovingInput = ((Mathf.Abs(inputX) + Mathf.Abs(inputZ)) >= 0.1f) ? true : false;
+        isMovingInput = ((Mathf.Abs(inputX) + Mathf.Abs(inputZ)) >= 0.1f) ? true : false;
         if (isMovingInput)
         {
+            if (aimFrozen) { moveState = enMoveState.AIMING; return; }
+
             bool isHoldingRun = (Input.GetButton("run")) ? true : false;
             if (isHoldingRun) { moveState = enMoveState.RUNNING; }
             else { moveState = enMoveState.WALKING; }
@@ -144,6 +143,8 @@ public class PController : MonoBehaviour
             case enMoveState.STILL:
                 //player is still
                 break;
+            case enMoveState.AIMING:
+                MoveUpdate(); break;
             case enMoveState.WALKING:
                 //player is moving
                 MoveUpdate(); break;
