@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Unity.Cinemachine;
 
 public class CamController : MonoBehaviour
 {
@@ -28,6 +29,20 @@ public class CamController : MonoBehaviour
     [SerializeField] private Transform playerBody;
     [SerializeField] private PController playerController;
     [SerializeField] private Transform cameraHolder;
+    [SerializeField] private CinemachineCamera cineCam;
+    [SerializeField] private Transform cineCamHolder;
+    [SerializeField] private Camera armCam;
+
+    [Header("Aiming Fields")]
+    [SerializeField] private float standardFOV;
+    [SerializeField] private float aimingFOV;
+    [SerializeField] private float FOVchangeSpeed;
+    [SerializeField] private float t;
+    [SerializeField] private float previousFOV;
+    [SerializeField] private float targetFOV;
+    [SerializeField] private bool isAiming;
+    [SerializeField] private bool isChangingFOV;
+
 
     private bool aimFrozen = false;
 
@@ -128,7 +143,7 @@ public class CamController : MonoBehaviour
         float mouseX = Input.GetAxis("ControllerX") * sensitivityX;
         float mouseY = Input.GetAxis("ControllerY") * sensitivityY;
         if (aimFrozen) { mouseX = 0; mouseY = 0; }
-
+        if (isChangingFOV) { ChangeFOV(); }
         movingLook = (Mathf.Abs(mouseX) + Mathf.Abs(mouseY) >= 0.1f) ? true : false;
 
         if(movingLook && canLook) { LookUpdate(mouseX, mouseY); }
@@ -136,15 +151,34 @@ public class CamController : MonoBehaviour
         XSwayUpdate();
 
 
-        transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
+        cineCamHolder.transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
 
         //This rotates the camera holder up and down when the player walks forward or backward
         cameraHolder.localRotation = Quaternion.Euler(rotationForward, 0f, 0f);
 
     }
 
+
+    private void ChangeFOV()
+    {
+        t += Time.deltaTime * FOVchangeSpeed;
+        float currentFOV = Mathf.Lerp(previousFOV, targetFOV, t);
+        cineCam.Lens.FieldOfView = currentFOV;
+        armCam.fieldOfView = currentFOV;
+        float difference = Mathf.Abs(currentFOV - targetFOV);
+        if (difference <= 0.1f) { isChangingFOV = false; }
+    }
+
     public void SetAimFrozen(bool frozen)
     {
         aimFrozen = frozen;
+        isAiming = frozen;
+
+        previousFOV = cineCam.Lens.FieldOfView;
+        isChangingFOV = true;
+        t = 0;
+        targetFOV = isAiming ? aimingFOV : standardFOV;
     }
+
+    
 }
