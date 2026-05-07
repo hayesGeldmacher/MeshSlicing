@@ -9,13 +9,15 @@ public class GunBase : MonoBehaviour
     [SerializeField] protected float range;
     [SerializeField] protected float rangeFalloff; //how far does damage deteriorate outside range
     public bool canFire = true;
+    [SerializeField] private Transform firePoint;
 
     [Header("Damage Fields")]
     [SerializeField] protected float damage;
 
     [Header("Aiming Fields")]
+    [SerializeField] private bool standardAiming = false;
+    [SerializeField] private bool aimWhileJumping = false;
     [SerializeField] private Transform gunParent;
-    [SerializeField] private Transform barrellPoint;
     [SerializeField] protected bool aiming = false;
 
     [SerializeField] protected float aimSensitivityX;
@@ -52,11 +54,11 @@ public class GunBase : MonoBehaviour
         Debug.Log("Fired a gun!");
         PlayFireAnimation();
 
-        Vector3 forward = barrellPoint.up;
-        Debug.DrawRay(barrellPoint.position, forward * 100, Color.red, 20);
+        Vector3 forward = firePoint.forward;
+        Debug.DrawRay(firePoint.position, forward * 100, Color.red, 20);
 
         RaycastHit hit;
-        if(Physics.Raycast(barrellPoint.position, forward, out hit, range, fireMask))
+        if(Physics.Raycast(firePoint.position, forward, out hit, range, fireMask))
         {
             GameObject hitObject = hit.transform.gameObject;
 
@@ -111,11 +113,14 @@ public class GunBase : MonoBehaviour
 
     protected virtual void AimUpdate()
     {
-        bool grounded = PController.instance.GetGrounded();
-
+        bool grounded = true;
+        if (!aimWhileJumping) { grounded = PController.instance.GetGrounded(); } 
+        
         if (Input.GetButton("Fire2") && !aiming && grounded) { EnterAim(true); }
         else if (Input.GetButtonUp("Fire2") || !grounded) { EnterAim(false); }
 
+
+        return;
         if (aiming)
         {
             aimInputX = Input.GetAxis("ControllerX") * aimSensitivityX;

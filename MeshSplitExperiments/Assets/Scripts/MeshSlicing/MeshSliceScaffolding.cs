@@ -11,7 +11,7 @@ public class MeshSliceScaffolding : MonoBehaviour
     [SerializeField]
     private Vector3 _origin;
     [SerializeField] protected bool isSkinned = false;
-    [SerializeField] protected SkinnedMeshRenderer skinMesh;
+    [SerializeField] protected  SkinnedMeshRenderer skinMesh;
 
     [Range(-1.0f, 1.0f)]
     public float normalX;
@@ -49,9 +49,6 @@ public class MeshSliceScaffolding : MonoBehaviour
     [Header("Layers")]
     [SerializeField] private LayerMask debrisMask;
     [SerializeField] protected string debrisLayerName = "debris";
-
-    public bool removeComponents = false;
-
 
     private bool isPlaying = false; //are we playing or in-editorr?
 

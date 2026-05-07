@@ -8,6 +8,8 @@ public class MeshSlicerEditor : Editor
 {
     public override void OnInspectorGUI()
     {
+
+
         DrawDefaultInspector();
         MeshSliceScaffolding meshSlicer = target as MeshSliceScaffolding;
 

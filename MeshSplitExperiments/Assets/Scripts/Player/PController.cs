@@ -16,6 +16,7 @@ public class PController : MonoBehaviour
     [SerializeField] private float inputX; //receives player input
     [SerializeField] private float inputZ; //receives player input
     [SerializeField] private bool isMovingInput = false; //is player moving
+    private bool isMovingLastFrame = false;
     [SerializeField] private float storedSpeed; //stored movement from last frame
     [SerializeField] private float storedDecayRate; //how fast does stored movement decay
 
@@ -32,10 +33,15 @@ public class PController : MonoBehaviour
     [SerializeField] private float jumpTimer = 0.4f;
     [SerializeField] private float jumpCoolDown = 0.0f;
 
+  
     [SerializeField] private float jumpStrength;
     [SerializeField] private float gravityStrength;
     [SerializeField] private float velocity;
     [SerializeField] private float minVelocity; //the strongest it can pull down
+
+    [Header("Animation")]
+    [SerializeField] private Animator armbob;
+
 
     private bool aimFrozen = false;
 
@@ -121,15 +127,22 @@ public class PController : MonoBehaviour
          inputZ = Input.GetAxisRaw("Vertical");
 
         isMovingInput = ((Mathf.Abs(inputX) + Mathf.Abs(inputZ)) >= 0.1f) ? true : false;
+
         if (isMovingInput)
         {
-            if (aimFrozen) { moveState = enMoveState.AIMING; return; }
+            if (!isMovingLastFrame) { EnterMoving(true); Debug.Log("Started moving from stop!"); }
+            if (aimFrozen) { moveState = enMoveState.AIMING; }
 
             bool isHoldingRun = (Input.GetButton("run")) ? true : false;
             if (isHoldingRun) { moveState = enMoveState.RUNNING; }
             else { moveState = enMoveState.WALKING; }
         }
-        else { moveState = enMoveState.STILL; }
+        else
+        {
+            if (isMovingLastFrame != isMovingInput) { EnterMoving(false); Debug.Log("Caught moving last frame!"); }
+            moveState = enMoveState.STILL;
+        }
+        isMovingLastFrame = isMovingInput;
     }
 
     // Update is called once per frame
@@ -178,10 +191,15 @@ public class PController : MonoBehaviour
         return isGrounded;
     }
 
+    void EnterMoving(bool moving)
+    {
+        armbob.SetBool("moving", moving);
+    }
+
+
     //rigidbody collisions
     void OnControllerColliderHit(ControllerColliderHit hit)
     {
-
 
         Rigidbody body = hit.collider.attachedRigidbody;
 
