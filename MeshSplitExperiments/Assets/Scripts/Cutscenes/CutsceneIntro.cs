@@ -11,7 +11,9 @@ public class CutsceneIntro : MonoBehaviour
     [SerializeField] private Animator textAnim; //the text fading in or out
 
     [SerializeField] public List<Segment> segments = new List<Segment>();
+    [SerializeField] public Segment currentSegment;
     [SerializeField] private int segIndex = 0;
+    [SerializeField] private int currentSegClick;
 
     [Header("Timing Fields")]
     [SerializeField] private bool hasStarted = false;
@@ -21,6 +23,12 @@ public class CutsceneIntro : MonoBehaviour
 
     [Header("Scene Fields")]
     [SerializeField] private string nextScene = "next";
+
+    [SerializeField] private DialogueTrigger trigger;
+
+    [Header("Audio Fields")]
+    [SerializeField] private AudioSource source;
+    
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -46,6 +54,19 @@ public class CutsceneIntro : MonoBehaviour
             CallEndScene();
             return;
         }
+
+        
+    }
+
+
+    public void IncrementSegment()
+    {
+        segIndex++;
+        currentSegClick = 0; [SerializeField] private DialogueTrigger trigger; [SerializeField] private DialogueTrigger trigger;
+        Segment segment = segments[segIndex];
+        segment.started = true;
+        if (segment.transitionScene) { screenAnim.SetTrigger(segment.sceneCue); }
+        if (segment.playAudioCue) { source.clip = segment.audioCue; source.Play(); }
     }
 
     private void CallEndScene()
@@ -70,16 +91,23 @@ public class CutsceneIntro : MonoBehaviour
 [System.Serializable]
 public class Segment
 {
+    public bool started = false;
     [Header("Animation")]
     [SerializeField] public bool transitionScene = false;
     public string sceneCue;
 
+    public Dialogue dialogue;
+    public int clickNum = 1;
+
     [Header("Audio")]
+    public bool playAudioCue = false;
     public AudioSource audioCue;
 
-    [Header("Dialogue")]
-    public string dialogue;
-    public bool hasDialogue = false;
+    public void InitializeSegment()
+    {
+        int count = dialogue.count;
+        if(count > 0) { clickNum = count; }
+    }
 
 }
 
