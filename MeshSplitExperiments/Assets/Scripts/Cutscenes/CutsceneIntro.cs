@@ -44,6 +44,7 @@ public class CutsceneIntro : MonoBehaviour
         yield return new WaitForSeconds(introWait);
         FadeImage.instance.CallWhite();
         yield return new WaitForSeconds(2f);
+        canInteract = true;
     }
 
     private void CheckForIndex()
@@ -53,20 +54,41 @@ public class CutsceneIntro : MonoBehaviour
             Debug.Log("no more segments, ending the scene");
             CallEndScene();
             return;
-        }
+        }  
+    }
 
+    void IncrementSegment()
+    {
+        currentSegClick = 0;
+        Segment segment = segments[segIndex];
+        currentSegment = segment;
+        segment.InitializeSegment();
+        if (segment.transitionScene) { screenAnim.SetTrigger(segment.sceneCue); }
+        if (segment.playAudioCue) { source.clip = segment.audioCue; source.Play(); }
+        trigger.dialogue = segment.dialogue;
+        TriggerSegment();
+        segIndex++;
+    }
+
+    public void CheckCurrentClick()
+    {
+       if(currentSegment == null) { IncrementSegment(); return; }
         
+        if(currentSegClick >= currentSegment.clickNum)
+        {
+            IncrementSegment();
+        }
+        else
+        {
+            TriggerSegment();
+        }
     }
 
 
-    public void IncrementSegment()
+    public void TriggerSegment()
     {
-        segIndex++;
-        currentSegClick = 0; [SerializeField] private DialogueTrigger trigger; [SerializeField] private DialogueTrigger trigger;
-        Segment segment = segments[segIndex];
-        segment.started = true;
-        if (segment.transitionScene) { screenAnim.SetTrigger(segment.sceneCue); }
-        if (segment.playAudioCue) { source.clip = segment.audioCue; source.Play(); }
+        trigger.TriggerDialogue();
+        currentSegClick++;
     }
 
     private void CallEndScene()
@@ -84,7 +106,13 @@ public class CutsceneIntro : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (canInteract)
+        {
+            if (Input.GetButtonDown("Fire1"))
+            {
+                CheckCurrentClick();
+            }
+        }
     }
 }
 
@@ -101,11 +129,12 @@ public class Segment
 
     [Header("Audio")]
     public bool playAudioCue = false;
-    public AudioSource audioCue;
+    public AudioClip audioCue;
 
     public void InitializeSegment()
     {
-        int count = dialogue.count;
+        started = true;
+        int count = dialogue.sentences.Length;
         if(count > 0) { clickNum = count; }
     }
 
